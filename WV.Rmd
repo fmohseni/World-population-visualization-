@@ -1,0 +1,109 @@
+---
+title: "Farnaz Mohseni"
+output: pdf_document
+date: "2022-12-01"
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(maps)
+```
+
+```{r}
+#Datasets: Dataset:https://www.kaggle.com/datasets/iamsouravbanerjee/world-population-datasethttps://www.kaggle.com/datasets/paultimothymooney/latitude-and-longitude-for-every-country-and-state
+df1 <- read.csv("world_population.csv")
+df1
+dfw <- read.csv("world_country_and_usa_states_latitude_and_longitude_values.csv")
+dfw
+```
+```{r}
+# joining the two data frames to add the longitude and latitude for each country 
+
+dfw1 <- dplyr::select(dfw, latitude, longitude, country)
+dfw1
+jdf <- left_join(df1, dfw1, by= c("Country.Territory" = "country"))
+jdf
+```
+
+
+
+```{r}
+colnames(jdf)[6:13] <- c("2022", "2020", "2015", "2010", "2000", "1990", "1980", "1970")
+jdf
+```
+
+
+```{r}
+df2 <- gather(jdf, '2022':'1970', key = 'Year', value = 'Population_mil')
+df2$Year <- as.numeric(df2$Year)
+df2$Population_mil <- df2$Population_mil/1000000
+df2
+max(df2$Population)
+min(df2$Population)
+```
+
+```{r}
+ggplot(df2) + geom_bar(aes(Year, Population_mil, fill = Continent), stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + labs(y="Population in millions")
+```
+
+```{r}
+df3 <- df2 %>% filter(Year==2022)
+world_map <- map_data("world")
+ggplot(world_map) + 
+  geom_polygon(aes(x = long, y = lat, group = group), fill="white", colour = "grey") + theme_bw() +
+  geom_point(data = df2, shape = 21, mapping = aes(x = longitude, y = latitude, 
+size = Population_mil, fill = World.Population.Percentage, alpha= 0.5)) + guides(alpha = "none") + scale_size_continuous(name = "Population in millions", breaks=c(0, 200, 600, 1000)) +
+  facet_wrap(~Year) + scale_fill_continuous(name="World population percentage") + 
+  labs(x="Longitude", y="Latitude")
+```
+```{r}
+world_map <- map_data("world")
+world_map
+df2w <- left_join(df2, world_map, by = c("Country.Territory" = "region"))
+ggplot(df2w) + 
+geom_polygon(aes(x = long, y = lat, group = group, fill = Population_mil), colour = "black") + 
+  theme_bw() + scale_fill_viridis_c(name = "Population in millions", option = "H") +
+  facet_wrap(~Year)+ 
+  labs(x="Longitude", y="Latitude")
+```
+```{r}
+#Creating a data frame for world population 
+totp <- colSums(jdf[ , c(6:13)], na.rm=TRUE)
+totp
+df_wp <- data.frame(Year = c(2022, 2020, 2015, seq(2010, 1970, by=-10)), Population_mil = totp/1000000)
+df_wp
+# Plotting world population over the years 
+ggplot(df_wp, aes(Year, Population_mil)) + geom_line() + 
+  geom_point(shape = 21, fill = "purple", color = "black", size = 3) + geom_line(data = ) + 
+  geom_point(shape = 21, fill = "purple", color = "black", size = 3)
+```
+
+```{r}
+## Reference: https://r-graph-gallery.com/338-interactive-circle-packing-with-circlepacker
+devtools::install_github("jeromefroe/circlepackeR")
+library(circlepackeR)
+library(data.tree)
+
+rdata <- data.frame(
+  root=rep("root", 6),
+  group=df2$Continent, 
+  subgroup = df2$Country.Territory,
+  subsubgroup = df2$Year,
+  value=df2$Population_mil
+)
+rdata
+rdata$pathString <- paste("world", rdata$group, rdata$subgroup, rdata$subsubgroup, sep = "/")
+population <- as.Node(rdata)
+a <- circlepackeR(population, size = "value", color_min = "hsl(200,60%,60%)", color_max = "hsl(341,30%,40%)")
+a
+#To save the widget: 
+# library(htmlwidgets)
+# saveWidget(a, file=paste0( getwd(), "/circular_packing_circlepackeR2.html"))
+```
+
+
+
+
