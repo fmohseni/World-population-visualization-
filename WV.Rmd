@@ -12,7 +12,8 @@ library(maps)
 ```
 
 ```{r}
-#Datasets: Dataset:https://www.kaggle.com/datasets/iamsouravbanerjee/world-population-datasethttps://www.kaggle.com/datasets/paultimothymooney/latitude-and-longitude-for-every-country-and-state
+#Datasets: Dataset:https://www.kaggle.com/datasets/iamsouravbanerjee/world-population-dataset
+#https://www.kaggle.com/datasets/paultimothymooney/latitude-and-longitude-for-every-country-and-state
 df1 <- read.csv("world_population.csv")
 df1
 dfw <- read.csv("world_country_and_usa_states_latitude_and_longitude_values.csv")
